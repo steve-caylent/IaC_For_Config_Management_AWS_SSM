@@ -100,7 +100,7 @@ Security Group for EC2 instances <strike>allowing port 22 inbound from Bastion H
 
 ## Setting up the environment for Session Manager
 
-Use the cloudformation template below to set up the environment removing the EC2 Bastion Host and creating SSM endpoints<br />
+Use the cloudformation template below to update the stack you created above.<br />
 * SSM-Without-Bastion.yml *- for accessing EC2 via Session Manager*
 <br />
 
