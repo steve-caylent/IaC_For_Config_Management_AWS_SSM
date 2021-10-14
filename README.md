@@ -72,11 +72,15 @@ Use the cloudformation template below to set up the environment removing the EC2
 As usual wait out the setup...
 
 
-# Finished!
+## Finished!
 
-And it's as easy as that! In a few steps you've created a dynamic VPN connection between your on-premises and AWS environments. Enjoy your connectivity.
+And it's as easy as that! In a few steps you've created SSM Session Manager endpoints for access to EC2 in private subnets AND with no open ports!
+The benefit of having the SSM VPCE's is that you can now use Systems Manager to Run Commands, install updates and scan using Inspector.<br />
+Check here for more info on Systems Manager [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/what-is-systems-manager.html)
 
-Check out the official documentation for an alternative way of learning https://docs.aws.amazon.com/vpn/latest/s2svpn/SetUpVPNConnections.html
+## Author
+Caylent Inc.
+
 
 
 
