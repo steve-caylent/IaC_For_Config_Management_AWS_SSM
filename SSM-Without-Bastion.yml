@@ -1,0 +1,427 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description:  This template creates a VPC with public and private /24 subnets to demonstrate SSM Session Manager. 
+  At first a bastion host is created in a public subnet. 
+  Second, the bastion host is removed and SSM vpce are created to connect to the private subnets.
+Parameters:
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "Name of an existing SSH Keypair to access the instance"
+
+
+################################################
+#   Instances
+#    3 EC2 - each in own private subnet
+############################################### 
+
+
+Resources:
+  EC2A:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref KeyName
+      InstanceType: "t2.micro"
+      ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      SubnetId: !Ref SubnetPrivA
+      SecurityGroupIds: 
+        - !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: PRIV-EC2A
+  EC2B:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref KeyName
+      InstanceType: "t2.micro"
+      ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      SubnetId: !Ref SubnetPrivB
+      SecurityGroupIds: 
+        - !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: PRIV-EC2B
+  EC2C:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref KeyName
+      InstanceType: "t2.micro"
+      ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      SubnetId: !Ref SubnetPrivC
+      SecurityGroupIds: 
+        - !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: PRIV-EC2C
+
+
+#########################
+#   Security Groups
+#    SSM Requires 443
+#########################
+
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for EC2 Instance SSM Agent connects over TCP 443
+      VpcId: !Ref VPC
+      # No Ingress rules required now with SSM
+      SecurityGroupEgress:
+      - Description: allow outbound HTTPS to the VPC
+        CidrIp: '10.0.0.0/16'
+        FromPort: 443
+        ToPort: 443
+        IpProtocol: tcp
+      - Description: 'allow outbound ICMP '
+        CidrIp: '0.0.0.0/0'
+        FromPort: -1
+        ToPort: -1
+        IpProtocol: '-1'
+
+  VPCESecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for VPC Endpoints SSM TCP 443
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - Description: allow inbound HTTPS from EC2
+        SourceSecurityGroupId: !Ref EC2SecurityGroup
+        FromPort: 443
+        ToPort: 443
+        IpProtocol: tcp
+      SecurityGroupEgress:
+      - Description: allow outbound HTTPS to the VPC
+        CidrIp: '10.0.0.0/16'
+        FromPort: 443
+        ToPort: 443
+        IpProtocol: tcp
+
+
+################################################
+#   VPCE
+#    3 VPCE are needed (4 for Windows)
+#      SSM 
+#      SSM Messages
+#      EC2 Messages
+###############################################  
+
+
+  SsmVPCE:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssm
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref SubnetPrivA
+        - !Ref SubnetPrivB
+        - !Ref SubnetPrivC
+      SecurityGroupIds:
+        - !Ref VPCESecurityGroup
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+  SsmMessagesVPCE:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssmmessages
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref SubnetPrivA
+        - !Ref SubnetPrivB
+        - !Ref SubnetPrivC
+      SecurityGroupIds:
+        - !Ref VPCESecurityGroup
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+  Ec2MessagesVPCE:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2messages
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref SubnetPrivA
+        - !Ref SubnetPrivB
+        - !Ref SubnetPrivC
+      SecurityGroupIds:
+        - !Ref VPCESecurityGroup
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+
+###################################
+#   IAM ROLES
+#    SSM Role with managed policy
+#    Instance profile for EC2's
+###################################
+
+  SSMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+      # AmazonSSMManagedInstanceCore grants access to Session Manager
+      - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+  SSMInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref SSMRole
+
+
+################################################
+#   NAT GATEWAYS
+#    3 NATGW - 1 per AZ for High Availability
+#    3 Elastic IPs - 1 per NATGW
+#    Routes for 3 NATGW
+#    Routes for private subnets
+###############################################  
+
+
+  ElasticIPA:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  ElasticIPB:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  ElasticIPC:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  NatGatewayA:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt ElasticIPA.AllocationId
+      SubnetId: !Ref SubnetPublicA
+  NatGatewayB:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt ElasticIPB.AllocationId
+      SubnetId: !Ref SubnetPublicB
+  NatGatewayC:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt ElasticIPC.AllocationId
+      SubnetId: !Ref SubnetPublicC
+  RouteTablePrivateA: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: ssm-demo-vpc-rt-privateA
+  RouteTablePrivateB: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: ssm-demo-vpc-rt-privateB
+  RouteTablePrivateC: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: ssm-demo-vpc-rt-privateC
+  RouteNatGWA: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateA
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayA
+  RouteNatGWB: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateB
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayB
+  RouteNatGWC: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateC
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayC
+  RouteTableAssociationPrivA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetPrivA
+      RouteTableId: !Ref RouteTablePrivateA
+  RouteTableAssociationPrivB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetPrivB
+      RouteTableId: !Ref RouteTablePrivateB
+  RouteTableAssociationPrivC:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetPrivC
+      RouteTableId: !Ref RouteTablePrivateC
+
+
+##################################
+#   VPC 
+#    10.0.0.0/16
+#    Route Table for Public Subnets
+#     w/ associations for 3 AZs
+##################################  
+
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/21
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: ssm-demo-vpc
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+      - Key: Name
+        Value: ssm-demo-vpc-igw
+  InternetGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  RouteTablePublic: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: ssm-demo-vpc-rt-public
+  RouteTablePublicIPv4: 
+    Type: 'AWS::EC2::Route'
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId:
+        Ref: RouteTablePublic
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId:
+        Ref: InternetGateway
+  RouteTableAssociationPublicA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetPublicA
+      RouteTableId:
+        Ref: RouteTablePublic
+  RouteTableAssociationPublicB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetPublicB
+      RouteTableId:
+        Ref: RouteTablePublic
+  RouteTableAssociationPublicC:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetPublicC
+      RouteTableId:
+        Ref: RouteTablePublic
+
+
+##################################
+#   Subnets 
+#    /24 CIDR
+#    3 public subnets
+#    3 private subnets
+#    10.0.1.0/24 -> 10.0.6.0/24
+##################################  
+  
+
+  SubnetPrivA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: 10.0.1.0/24
+      Tags:
+        - Key: Name
+          Value: private-subnet-A
+  SubnetPrivB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Name
+          Value: private-subnet-B
+  SubnetPrivC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 2, !GetAZs '' ]
+      CidrBlock: 10.0.3.0/24
+      Tags:
+        - Key: Name
+          Value: private-subnet-C
+  SubnetPublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: 10.0.4.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public-subnet-A
+  SubnetPublicB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: 10.0.5.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public-subnet-B
+  SubnetPublicC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 2, !GetAZs '' ]
+      CidrBlock: 10.0.6.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public-subnet-C
+
+
+##################################
+#   Outputs
+#    Private IPs for 3 EC2 in 
+#     private subnets
+##################################  
+
+
+Outputs:
+  EC2APrivateIP:
+    Description: Private IP address of EC2A
+    Value: !GetAtt EC2A.PrivateIp
+  EC2BPrivateIP:
+    Description: Private IP address of EC2B
+    Value: !GetAtt EC2B.PrivateIp
+  EC2CPrivateIP:
+    Description: Private IP address of EC2C
+    Value: !GetAtt EC2B.PrivateIp
+
+
+  
