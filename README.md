@@ -80,7 +80,7 @@ The updated environment will have the following:
 * 3 NAT Gateways for High Availability
 * 3 private subnets
 * 3 EC2 Instances - 1 in each private subnet
-Security Group for EC2 instances <strike>allowing port 22 inbound from Bastion Host</strike> outbound port 443 only
+* Security Group for EC2 instances <strike>allowing port 22 inbound from Bastion Host</strike> outbound port 443 only
 * 3 Routes for private subnets/NAT Gateways
 * 3 SSM Endpoints - 1 in each private subnet
 * 3 SSM Messages Endpoints - 1 in each private subnet
