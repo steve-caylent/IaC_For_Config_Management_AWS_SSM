@@ -38,8 +38,36 @@ As usual wait out the setup...
 
 
 ### Accessing Bastion Host => Private EC2
+From your remote computer make sure you have AWS CLI installed and configured as well as having the correct KeyPair .pem file.
+![awscli](https://user-images.githubusercontent.com/90650872/137362188-56705dc4-11b1-40e3-96bc-b61f335cc3bf.png)
+<br />
+Using the CloudFormation Outputs find the IPs for accessing the EC2 instances 
+![outputs](https://user-images.githubusercontent.com/90650872/137362267-cc225231-ecb3-4912-afd3-a2f585254e8f.png)
+<br />
+First make sure SSH agent is running with your selected key pair
+```
+eval $(ssh-agent -s)
+ssh-add ./PEMFILE.pem
+```
+Now access the bastion host with the pem file and IP address with agent forwarding
+```
+ssh -A -i PEMFILE.pem ec2-user@PUBLICIPOFBASTIONHOST
+```
+Great! Now your'e connected to the Bastion Host EC2 instance in the public subnet.
+<br />
+
+### Connecting to EC2 in privates subnet via Bastion Host
+Now that you've connected to the Bastion Host let's connect to a private EC2 instance
+
+```
+ssh ec2-user@PRIVATEIPofEC2
+```
+![privateEC2](https://user-images.githubusercontent.com/90650872/137363799-688abbd7-0d62-4b09-9766-7bffacf9a5ef.png)
 
 
+Fantastic! You've connected to the private EC2 instance. It took several steps, leaves an EC2 running and leaves port 22 open! Time to change that!
+
+# Remote Access with AWS Systems Manager - Session Manager
 
 ### What will be created with Session Manager environment
 
