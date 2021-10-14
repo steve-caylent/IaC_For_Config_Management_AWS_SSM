@@ -1,6 +1,6 @@
 # IaC For Config Management - AWS SSM Session Manager
 
-AWS Systems Manager allows for Config Management of your EC2 Instances. AWS Systems Manager allows you to connect to EC2 instanes to perform Run Commands (similar to Ansible) only with accessing via SSH. The benefit of using AWS SSM Session Manager is to give you access to EC2 instances in private subnets without having to use a Bastion Host. Session Manager allows you to access your EC2s within private subnet directly from the AWS console or the AWS CLI. Using a Bastion Host, leaves your EC2 machines vulnerable to attack on port 22. Money is another factor to consider. Having an EC2 running as a Bastion Host can be costly. Reduce costs and tighening security are great reasons to consider using Session Manager.
+AWS Systems Manager allows for Config Management of your EC2 Instances. AWS Systems Manager allows you to connect to EC2 instances to perform Run Commands (similar to Ansible) only with access via SSH. The benefit of using AWS SSM Session Manager is to give you access to EC2 instances in private subnets without having to use a Bastion Host. Session Manager allows you to access your EC2s within a private subnet directly from the AWS console or the AWS CLI. Using a Bastion Host, leaves your EC2 machines vulnerable to attack on port 22. Money is another factor to consider. Having an EC2 running as a Bastion Host can be costly. Reduce costs and tightening security are great reasons to consider using Session Manager.
 
 
 **Session Manager allows access to EC2 and Remote VM's with Agent installed**
@@ -34,14 +34,14 @@ Use the cloudformation template below to set up the initial environment with an 
 
 ![SSM_Bastion](https://user-images.githubusercontent.com/90650872/137347028-8a968a1f-acd2-4f6f-adbc-fbb686e80990.png)
 
-As usual wait out the setup...
+As usual, wait out the setup...
 
 
 ### Accessing Bastion Host => Private EC2
 From your remote computer make sure you have AWS CLI installed and configured as well as having the correct KeyPair .pem file.
 ![awscli](https://user-images.githubusercontent.com/90650872/137362188-56705dc4-11b1-40e3-96bc-b61f335cc3bf.png)
 <br />
-Using the CloudFormation Outputs find the IPs for accessing the EC2 instances 
+Using the CloudFormation Outputs find the IPs for accessing the EC2 instances
 ![outputs](https://user-images.githubusercontent.com/90650872/137362267-cc225231-ecb3-4912-afd3-a2f585254e8f.png)
 <br />
 First make sure SSH agent is running with your selected key pair
@@ -53,7 +53,7 @@ Now access the bastion host with the pem file and IP address with agent forwardi
 ```
 ssh -A -i PEMFILE.pem ec2-user@PUBLICIPOFBASTIONHOST
 ```
-Great! Now your'e connected to the Bastion Host EC2 instance in the public subnet.
+Great! Now you're connected to the Bastion Host EC2 instance in the public subnet.
 <br />
 
 ### Connecting to EC2 in privates subnet via Bastion Host
@@ -65,7 +65,7 @@ ssh ec2-user@PRIVATEIPofEC2
 ![privateEC2](https://user-images.githubusercontent.com/90650872/137363799-688abbd7-0d62-4b09-9766-7bffacf9a5ef.png)
 
 
-Fantastic! You've connected to the private EC2 instance. It took several steps, leaves an EC2 running and leaves port 22 open! Time to change that!
+Fantastic! You've connected to the private EC2 instance. It took several steps, left an EC2 running and left port 22 open! Time to change that!
 
 # Remote Access with AWS Systems Manager - Session Manager
 
@@ -76,7 +76,7 @@ The updated environment will have the following:
 * 3 public subnets
 * <strike>EC2 Bastion Host in public subnet</strike>
 * <strike>Security Group for Bastion Host allowing port 22 inbound</strike>
-* public route 
+* public route
 * 3 NAT Gateways for High Availability
 * 3 private subnets
 * 3 EC2 Instances - 1 in each private subnet
@@ -88,7 +88,7 @@ The updated environment will have the following:
 * Security group for VPCE with inbound port 443 allowing the EC2 SG an outbound port 443 for the VPC.
 
 ### Requirements for using SSM Session Manager
-* A role with attached to the EC2 in private subnet to access Session Manager.
+* A role attached to the EC2 in a private subnet to access Session Manager.
 * OS that supports SSM agent (using Linux in demo)
 * SSM agent installed/started in instance (Amazon Linux 2 has by default)
   - To install SSM agent
@@ -107,10 +107,10 @@ Use the cloudformation template below to update the stack you created above.<br 
 ![SSM Without Bastion](https://user-images.githubusercontent.com/90650872/137347013-349e1139-a523-4fdf-a4c3-1b4d78e8041d.png)
 
 
-As usual wait out the setup...
+As usual, wait out the setup...
 
 ## Accessing EC2 with Sessions Manager
-Now that the VPCE have been created you can access the EC2 from the console or AWS CLI. To access from the CLI use the instance id to connect
+Now that the VPCE’s have been created you can access the EC2 from the console or AWS CLI. To access from the CLI use the instance id to connect
 ```
 aws ssm start-session --target INSTANCE ID
 ```
@@ -126,6 +126,8 @@ Check here for more info on Systems Manager [AWS SSM](https://docs.aws.amazon.co
 
 ## Author
 Caylent Inc.
+
+
 
 
 
