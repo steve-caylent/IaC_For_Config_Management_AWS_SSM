@@ -109,7 +109,15 @@ Use the cloudformation template below to update the stack you created above.<br 
 
 As usual wait out the setup...
 
+## Accessing EC2 with Sessions Manager
+Now that the VPCE have been created you can access the EC2 from the console or AWS CLI. To access from the CLI use the instance id to connect
+```
+aws ssm start-session --target INSTANCE ID
+```
+![session](https://user-images.githubusercontent.com/90650872/137368134-57d5005e-e003-455b-ab77-9673de4d1f01.png)
 
+
+And that's all it takes! Easy and secure!
 ## Finished!
 
 And it's as easy as that! In a few steps you've created SSM Session Manager endpoints for access to EC2 in private subnets AND with no open ports!
