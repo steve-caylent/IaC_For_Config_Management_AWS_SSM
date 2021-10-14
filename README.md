@@ -2,6 +2,12 @@
 
 AWS Systems Manager allows for Config Management of your EC2 Instances. AWS Systems Manager allows you to connect to EC2 instanes to perform Run Commands (similar to Ansible) only with accessing via SSH. The benefit of using AWS SSM Session Manager is to give you access to EC2 instances in private subnets without having to use a Bastion Host. Session Manager allows you to access your EC2s within private subnet directly from the AWS console or the AWS CLI. Using a Bastion Host, leaves your EC2 machines vulnerable to attack on port 22. Money is another factor to consider. Having an EC2 running as a Bastion Host can be costly. Reduce costs and tighening security are great reasons to consider using Session Manager.
 
+
+**Session Manager allows access to EC2 and Remote VM's with Agent installed**
+![AWS SSM High Level](https://user-images.githubusercontent.com/90650872/137359824-852ab878-5015-4b8f-81f0-a84851e7b818.png)
+
+
+
 ### Accessing EC2 in private subnets via a Bastion Host in a public subnet
 The traditional way to access machines with private IPs is to first connect to a Bastion Host with a public IP and then forward into the machines with private IPs only. In this initial setup we will connect to the private subnet using a Bastion Host.
 
@@ -57,6 +63,10 @@ Security Group for EC2 instances <strike>allowing port 22 inbound from Bastion H
 * A role with attached to the EC2 in private subnet to access Session Manager.
 * OS that supports SSM agent (using Linux in demo)
 * SSM agent installed/started in instance (Amazon Linux 2 has by default)
+  - To install SSM agent
+  ``` install SSM agent
+   curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm"
+   sudo yum install -y session-manager-plugin.rpm
 * 3 VPCE endpoints for linux EC2 (Windows EC2 requires 4)
 * Security Group for VPC endpoints allowing EC2 to communicate with System Manager (port 443)
 
