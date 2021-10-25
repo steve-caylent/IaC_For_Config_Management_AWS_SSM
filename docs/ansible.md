@@ -1,16 +1,38 @@
-# IaC For Config Management - AWS SSM Session Manager
+# IaC For Config Management - AWS State Manager and Run Command
 
-AWS Systems Manager allows for Config Management of your EC2 Instances. AWS Systems Manager allows you to connect to EC2 instances to perform Run Commands (similar to Ansible) only with access via SSH. The benefit of using AWS SSM Session Manager is to give you access to EC2 instances in private subnets without having to use a Bastion Host. Session Manager allows you to access your EC2s within a private subnet directly from the AWS console or the AWS CLI. Using a Bastion Host, leaves your EC2 machines vulnerable to attack on port 22. Money is another factor to consider. Having an EC2 running as a Bastion Host can be costly. Reduce costs and tightening security are great reasons to consider using Session Manager.<br />
+AWS Systems Manager has two other important features when it comes to config management; State Manager and Run Command. These two features allows you to automate management tasks in a secure and easy to use way. Better security is provided over traditional SSH and incoming port 22 doesn't need to be open. All connections are audited by CloudTrail and permissions can be controlled using IAM. Ansible can now be used to deploy runbooks in a more secure fashion.
+<br />
 <br />
 [Back to README](../README.md)
 
-**Session Manager allows access to EC2 and Remote VM's with Agent installed**
+
+## Setting up the environment
+
+Use the same cloudformation template (below) that is used in the Session Manager demo. This will create EC2's to connect to using Ansible <br />
+* SSM-Without-Bastion.yml *- for accessing EC2 via Session Manager*
+<br />
+
+![SSM Without Bastion](https://user-images.githubusercontent.com/90650872/137347013-349e1139-a523-4fdf-a4c3-1b4d78e8041d.png)
+
+**State Manager and Run Command can deploy Ansible to EC2 and Remote VM's with Systems Manager Agent installed**
 ![AWS SSM High Level](https://user-images.githubusercontent.com/90650872/137359824-852ab878-5015-4b8f-81f0-a84851e7b818.png)
 
 
 
-### Accessing EC2 in private subnets via a Bastion Host in a public subnet
-The traditional way to access machines with private IPs is to first connect to a Bastion Host with a public IP and then forward into the machines with private IPs only. In this initial setup we will connect to the private subnet using a Bastion Host.
+### Installing Ansible on target instances
+Ansible must be installed on the EC2 instances you intend to use. That can be done during the bootstrap process but in this example you can install it manually or with `Run Command`. See below for intalling on different distributions.
+
+#### Amazon Linux
+`sudo pip install ansible`
+
+#### Ubuntu
+`sudo apt-get install ansible -y`
+
+#### RedHat 7
+`sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm`
+`sudo yum -y install ansible`
+
+
 
 ### What will be created with initial environment
 
