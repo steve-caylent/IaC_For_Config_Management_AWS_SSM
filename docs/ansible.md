@@ -38,11 +38,13 @@ There are several commands you can choice from. In order to install ansible usin
 
 And just like that ansible has been installed on all of the selected instances!
 
+![InstallAnsible](./images/install.png)
+
 ![AnsiblePlaybook](./images/commandparameters.png)
 
 ![RunAnsible](./images/runansible.png)
 
-![InstallAnsible](./images/install.png)
+
 
 ![CheckEc2](./images/check.png)
 
