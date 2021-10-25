@@ -28,8 +28,9 @@ Ansible must be installed on the EC2 instances you intend to use. That can be do
 ![CheckEc2](./images/check.png)
 ![AnsiblePlaybook](./images/commandparameters.png)
 ![InstallAnsible](./images/install.png)
-![CheckEc2](./images/run.png)
-![CheckEc2](./images/check.png)
+![UsingRunCommand](./images/run.png)
+![RunAnsible](./images/runansible.png)
+![ShellCommand](./images/shell.png)
 
 
 
