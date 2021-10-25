@@ -25,6 +25,12 @@ Ansible must be installed on the EC2 instances you intend to use. That can be do
 `sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm`<br />
 `sudo yum -y install ansible`
 
+![CheckEc2](./images/check.png)
+![AnsiblePlaybook](./images/commandparameters.png)
+![InstallAnsible](./images/install.png)
+![CheckEc2](./images/run.png)
+![CheckEc2](./images/check.png)
+
 
 
 ## Finished!
