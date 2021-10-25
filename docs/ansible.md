@@ -40,25 +40,26 @@ And just like that ansible has been installed on all of the selected instances!
 
 ![InstallAnsible](./images/install.png)
 
-![AnsiblePlaybook](./images/commandparameters.png)
+## Deploying to Instances using Ansible Playbook
+Systems Manager Run Command has many options for different commands, one of them being Running Ansible Playbooks. That's exaxtly what we need so in this case make the appropriate selection below.
 
 ![RunAnsible](./images/runansible.png)
 
+### Running Ansible Playbook
+Use the ansible playbook provided in this solution (playbook.yml). Copy and paste the contents in the command parameters and select the 3 instances as you did before. This playbook will install httpd on all 3 instances. 
 
+![AnsiblePlaybook](./images/commandparameters.png)
+
+
+### Success
+Great! Now if you want to make sure that everything was installed correctly, use Session Manager to connect into one of the 3 instances.
 
 ![CheckEc2](./images/check.png)
 
 
-
-
-
-
-
-
 ## Finished!
 
-And it's as easy as that! In a few steps you've created SSM Session Manager endpoints for access to EC2 in private subnets AND with no open ports!
-The benefit of having the SSM VPCE's is that you can now use Systems Manager to Run Commands, install updates and scan using Inspector.<br />
+And it's as easy as that! In a few steps you've managed to see the power of using Run Command both with and without Ansible. Enjoy!<br />
 Check here for more info on Systems Manager [AWS SSM](https://docs.aws.amazon.com/systems-manager/latest/userguide/what-is-systems-manager.html)
 
 ## Author
