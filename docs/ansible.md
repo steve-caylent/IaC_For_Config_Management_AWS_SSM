@@ -25,9 +25,18 @@ Ansible must be installed on the EC2 instances you intend to use. That can be do
 `sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm`<br />
 `sudo yum -y install ansible`
 
+
+### Using AWS Systems Manager Run Command
+Navigate over to AWS Systems Manager and select Run Command. This service is able to run commands as part of config management. 
 ![UsingRunCommand](./images/run.png)
 
+### Selecting appropriate Run Command
+There are several commands you can choice from. In order to install ansible using Run Command we will have to use a Shell Command. Select it and in the commands paste in 
+`sudo yum -y install ansible`. For instances, select the 3 instances created in private subnets. Ignore output to S3 and run the command! 
+
 ![ShellCommand](./images/shell.png)
+
+And just like that ansible has been installed on all of the selected instances!
 
 ![AnsiblePlaybook](./images/commandparameters.png)
 
